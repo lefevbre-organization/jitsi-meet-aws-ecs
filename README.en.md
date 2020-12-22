@@ -1,17 +1,21 @@
 
 <p align="center">
-  <img src="https://img.s3wfg.com/web/img/images_uploaded/8/c/dominion_logo_620x350.jpg" />
+  <img src="https://img.s3wfg.com/web/img/images_uploaded/8/c/dominion_logo_620x350.jpg" width="30%" height="30%"/>
 </p>
 
 # Jitsi Meet on Amazon Elastic Container Service
 
-![](docs/jitsi-docker.png)
+<img src="docs/jitsi-docker.png" width="25%" height="25%"/>
 
 [Jitsi](https://jitsi.org/) is a set of Open Source projects that allows you to easily build and deploy secure videoconferencing solutions.
 
-[Jitsi Meet](https://jitsi.org/jitsi-meet/) is a fully encrypted, 100% Open Source video conferencing solution that you can use all day, every day, for free — with no account needed.
+[Jitsi Meet](https://jitsi.org/jitsi-meet/) is a fully encrypted, 100% Open Source video conferencing solution that you can use all day, every day, for free with no account needed.
 
 This repository contains the necessary tools to run a Jitsi Meet stack on [Docker](https://www.docker.com) using [Docker Compose](https://docs.docker.com/compose/), as well as the instructions needed to deployment the stack in [Amazon Elastic Container Services](https://aws.amazon.com/ecs/)
+
+The following high-level design architecture diagran depicts the services, containers and ports exposed by Jitsi on ECS:
+
+<img src="docs/aws-ecs-jitsi-architecture.png" width="90%" height="90%"/>
 
 ## Getting Started
 
@@ -73,9 +77,10 @@ After getting the ECS cluster up and running, the task definition for jitsi meet
 
 **WARNING: If the task definition is already created and/or manually modified through the AWS Console, executing the following command will overwrite the task definition, leading to lost any previous configuration.**
 
-
 ```bash
 cd jitsi-meet
+cp env.example .env
+./gen-passwords.sh
 ecs-cli compose --file docker-compose.yml create
 ```
 
@@ -85,11 +90,15 @@ Through the AWS Console, go to Elastic Container Services, select the task defin
 
 Click on *Create* to save the new task definition.
 
+<img src="docs/aws-network-settings-links-1.png" width="75%" height="75%"/>
+
 Repeat the last procedure, now for *prosody* container definition with the following content:
 
 **xmpp.meet.jitsi**
 
 Click on *Create* to save the new task definition.
+
+<img src="docs/aws-network-settings-links-2.png" width="75%" height="75%"/>
 
 ### Create ECS Service
 
@@ -97,12 +106,39 @@ Through the AWS Console, go to Elastic Container Service, select the ECS Cluster
 
 - In Lauch Type select *EC2*
 - Fill out Service name with the content *jitsi-meet*
-- Fill out Number of tasks with the content *2*
+- Fill out Number of tasks with the content *2* (It should be the same number as defined in ECS_CLUSTER_SIZE)
 - In Task Placement select *One Task per host*
 
 Click on Next Step three times and finally click on *Create Service*
 
-## TODO
-- Update Security Group
-- Add SSL Certificate
-- Configure Load Balancer
+<img src="docs/aws-create-ecs-service.gif" width="75%" height="75%"/>
+
+### Update default ECS Security Group
+
+The following ports must be open in the default security group:
+
+| Type | Protocol | Port Range |
+| --- | --- | --- |
+| HTTP | TCP | 80 |
+| Custom TCP | TCP | 8080 | 
+| Custom TCP | TCP | 8000 |
+| Custom TCP | TCP | 8443 |
+| Custom UDP | UDP | 10000 |
+
+Select the ECS cluster, in the ECS Instance tab, click on any ECS Instance, select the EC2 instance again, in the security tab, click on the security group to edit the inbound rules.
+
+<img src="docs/aws-update-default-ecs-sg.gif" width="75%" height="75%"/>
+
+### Configure an Application Load Balancer with SSL
+
+- Listeners: Add HTTP (Secure HTTP) listener 
+- VPC: Select the VPC created for the ECS Cluster and select both availability zones.
+- Upload the certificated or select it from ACM.
+- Security group: Add the port 443 and 80-
+- Target:
+    - Protocol: HTTPS
+    - Port: 8443
+        - Health check: 
+            - Protocol: HTTPS
+            - Path: /
+- Register Target: Select just one ECS instances from the ECS cluster.

@@ -1,17 +1,21 @@
 
 <p align="center">
-  <img src="https://img.s3wfg.com/web/img/images_uploaded/8/c/dominion_logo_620x350.jpg" />
+  <img src="https://img.s3wfg.com/web/img/images_uploaded/8/c/dominion_logo_620x350.jpg" width="30%" height="30%"/>
 </p>
 
 # Jitsi Meet en Amazon Elastic Container Service
 
-![](docs/jitsi-docker.png)
+<img src="docs/jitsi-docker.png" width="25%" height="25%"/>
 
 [Jitsi](https://jitsi.org/) es un conjunto de proyectos de Codigo Abierto que te permite facilmente contruir e instalar soluciones de videoconferencia seguras.
 
 [Jitsi Meet](https://jitsi.org/jitsi-meet/) es una solucion de video conferencia totalmente encriptada y 100% de codigo abierto que puedes usar todo el dia, todos los dias, gratis sin necesidad de una cuenta.
 
-Este repositorio contiene los archivos necesarios para correr un stack de Jitsi Meet en [Docker](https://www.docker.com) usando [Docker Compose](https://docs.docker.com/compose/) asi como tambien las instrucciones para correr el stack en [Amazon ElasticContainer Services](https://aws.amazon.com/es/ecs/)
+Este repositorio contiene los archivos necesarios para correr un stack de Jitsi Meet en [Docker](https://www.docker.com) usando [Docker Compose](https://docs.docker.com/compose/) asi como tambien las instrucciones para correr el stack en [Amazon Elastic Container Services](https://aws.amazon.com/es/ecs/)
+
+El siguiente diagrama de arquitectura de alto nivel muestra los servicios, contenedores y los puertos expuestos de Jitsi en ECS.
+
+<img src="docs/aws-ecs-jitsi-architecture.png" width="90%" height="90%"/>
 
 ## Primeros pasos
 
@@ -74,6 +78,8 @@ Despues de tener el cluster ECS arriba y corriendo, la definicion de tarea para 
 
 ```bash
 cd jitsi-meet
+cp env.example .env
+./gen-passwords.sh
 ecs-cli compose --file docker-compose.yml create
 ```
 
@@ -83,10 +89,15 @@ A traves de la consola de AWS, ir a Elastic Container Service, seleccionar la de
 
 Click en *Crear* para guardar la nueva definicion de tarea.
 
-Editar la definicion del contenedor *prosody* en la seccion Network Settings y colocar en el parametro *links* la siguiente configuracion:
+<img src="docs/aws-network-settings-links-1.png" width="75%" height="75%"/>
+
+Repetir el ultimo procedimiento, ahora para la definicion de container *prosody* con la siguiente configuracion:
+
 **xmpp.meet.jitsi**
 
 Click en *Crear* para guardar la nueva definicion de tarea.
+
+<img src="docs/aws-network-settings-links-2.png" width="75%" height="75%"/>
 
 ### Crear un servicio ECS
 
@@ -94,12 +105,39 @@ A traves de la consola de AWS, ir a Elastic Container Service, seleciona el clus
 
 - En Lauch Type seleccionar *EC2*
 - Llenar Service name con el contenido *jitsi-meet*
-- Llenar Number of tasks con el contenido *2*
+- Llenar Number of tasks con el contenido *2* (Deberia ser el mismo numero definido en ECS_CLUSTER_SIZE)
 - En Task Placement seleccionar *One Task per host*
 
 Click en Next Step tres veces y finalmente click en *Create Service*
 
-## TODO
-- Update Security Group
-- Add SSL Certificate
-- Configure Load Balancer
+<img src="docs/aws-create-ecs-service.gif" width="75%" height="75%"/>
+
+### Actualizar el Security Group por defecto de ECS
+
+Los siguientes puertos deben estar abiertos en el security group por defecto de ECS:
+
+| Type | Protocol | Port Range |
+| --- | --- | --- |
+| HTTP | TCP | 80 |
+| Custom TCP | TCP | 8080 | 
+| Custom TCP | TCP | 8000 |
+| Custom TCP | TCP | 8443 |
+| Custom UDP | UDP | 10000 |
+
+Seleccion el ECS cluster, en la pestaña ECS Instance, click en cualquier instancia ECS, seleciona la instancia ECS nuevamente, en la pestaña de seguridad, click en Security Group para editar las reglas de ingreso. 
+
+<img src="docs/aws-update-default-ecs-sg.gif" width="75%" height="75%"/>
+
+### Configurar un Application Load Balancer con SSL
+
+- Listeners: Agregar HTTP (Secure HTTP) listener 
+- VPC: Seleccionar la VPC creada para el ECS Cluster y selecionar ambas Availability Zones
+- Subir el certificado o selecionar desde ACM.
+- Security group: agregar puerto 443 y 80
+- Target: 
+    - Protocolo: HTTPS
+    - Port: 8443
+        - Health check: 
+            - Protocol: HTTPS
+            - Path: /
+- Registrar Target: Seleccionar una instancia del ECS Cluster
