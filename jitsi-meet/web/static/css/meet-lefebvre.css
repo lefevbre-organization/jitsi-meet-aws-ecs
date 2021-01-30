@@ -2,14 +2,22 @@ body{
     font-family: MTTMilano, Lato, Arial, sans-serif;
     font-size:20px;
 }
+a{
+    color:#001978;
+}
 a:hover{
-    text-decoration:none;
-    color:#FFF;
+    text-decoration:underline;
+    color:#001978;
+
 }
 /*header*/
 .bg-header{
     background:#001978;
     padding:10px 0;
+}
+.bg-header a:hover{
+     color:#FFF;
+    text-decoration: none;
 }
 .white{
     color:#FFF;
