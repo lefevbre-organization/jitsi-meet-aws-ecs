@@ -13,3 +13,4 @@ COPY static/thank-you-page.html /usr/share/jitsi-meet/static/close2.html
 RUN mkdir /usr/share/jitsi-meet/static/css /usr/share/jitsi-meet/static/images
 COPY static/css/* /usr/share/jitsi-meet/static/css
 COPY static/images/* /usr/share/jitsi-meet/static/images
+RUN sed -i -e 's/document.title=`${this.props._roomName} | ${interfaceConfig.APP_NAME}`/document.title=`${interfaceConfig.APP_NAME} | ${this.props._roomName}`/' /usr/share/jitsi-meet/libs/app.bundle.min.js
