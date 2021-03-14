@@ -1,13 +1,15 @@
 version: 1
 task_definition:
-  task_size:
-    mem_limit: 8192
   services:
     web:
-      mem_limit: 1024m
+      cpu_shares: 1024
+      mem_limit: 2048m
     prosody:
-      mem_limit: 1024m
+      cpu_shares: 1024
+      mem_limit: 2048m
     jicofo:
-      mem_limit: 1024m
+      cpu_shares: 1024
+      mem_limit: 2048m
     jvb:
-      mem_limit: 4096m
+      cpu_shares: 1024
+      mem_limit: 8094m
