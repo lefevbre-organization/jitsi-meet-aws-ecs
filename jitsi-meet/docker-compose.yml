@@ -3,6 +3,7 @@ version: '3'
 services:
     # Frontend
     web:
+        image: elefebvreoncontainers/jitsi-web:0320f54
         build:
           context: web
         restart: ${RESTART_POLICY}
