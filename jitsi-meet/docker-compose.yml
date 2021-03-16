@@ -3,7 +3,7 @@ version: '3'
 services:
     # React Fronted
     frontend:
-        image: urbinaalex17/jitsi-meet-react-frontend:935fc7bfa54b527667e5c8c3214ebb9e24e9f87f
+        image: urbinaalex17/jitsi-meet-react-frontend:main-latest
         restart: ${RESTART_POLICY}
         ports:
             - '80:80'
@@ -15,7 +15,7 @@ services:
 
     # Votes Messaging API
     api:
-        image: urbinaalex17/jitsi-votes-messaging-api:8308633d301c2e54e2e89f5f44fe2812996c6b87
+        image: urbinaalex17/jitsi-votes-messaging-api:master-latest
         restart: ${RESTART_POLICY}
         ports:
             - '5000:5000'
