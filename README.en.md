@@ -21,7 +21,7 @@ The following high-level design architecture diagran depicts the services, conta
 
 ### Prerequisites
 
-You have got to install the following tools: 
+You have got to install the following tools:
 - [ecs-cli](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_CLI_installation.html)
 - [docker](https://docs.docker.com/get-docker)
 - [docker-compose](https://docs.docker.com/compose/install)
@@ -43,7 +43,7 @@ The following environment variables will be set in the shell:
 | AWS_SECRET_ACCESS_KEY | Specifies the AWS secret key to use | KHvshFRp8SstYaou936ZtQD0IaaZXXXXXXXXXXXX |
 | ECS_CLUSTER | Specifies the ECS cluster name to use | jitsi-cluster |
 | AWS_REGION | Specifies the AWS region to use | eu-west-3 |
-| AWS_KEYPAIR | Specifies the name of an existing key pair to enable SSH access to the EC2 instances | jitsi-keypair | 
+| AWS_KEYPAIR | Specifies the name of an existing key pair to enable SSH access to the EC2 instances | jitsi-keypair |
 | AWS_INSTANCE_TYPE | Specifies the EC2 instance type for your container instances | m5.xlarge |
 | ECS_CLUSTER_SIZE | Specifies the number of instances to launch and register to the cluster | 2 |
 
@@ -55,7 +55,7 @@ export AWS_ACCESS_KEY_ID=<replace>
 export AWS_SECRET_ACCESS_KEY=<replace>
 ecs-cli configure profile --profile-name $PROFILE_NAME --access-key $AWS_ACCESS_KEY_ID --secret-key $AWS_SECRET_ACCESS_KEY
 ```
- 
+
 Configure ECS cluster
 ```bash
 export ECS_CLUSTER=<replace>
@@ -68,7 +68,7 @@ Create ECS cluster
 export AWS_KEYPAIR=<replace>
 export AWS_INSTANCE_TYPE=<replace>
 export ECS_CLUSTER_SIZE=<replace>
-ecs-cli up --keypair $AWS_KEYPAIR --capability-iam --size $ECS_CLUSTER_SIZE --instance-type $AWS_INSTANCE_TYPE --launch-type EC2
+ecs-cli up --keypair $AWS_KEYPAIR --capability-iam --size $ECS_CLUSTER_SIZE --instance-type $AWS_INSTANCE_TYPE --launch-type EC2 --ecs-profile $PROFILE_NAME --cluster-config $ECS_CLUSTER
 ```
 
 ### ECS Task Definitions
@@ -81,10 +81,10 @@ After getting the ECS cluster up and running, the task definition for jitsi meet
 cd jitsi-meet
 cp env.example .env
 ./gen-passwords.sh
-ecs-cli compose --file docker-compose.yml create
+ecs-cli compose --file docker-compose.yml create --ecs-profile $PROFILE_NAME --cluster-config $ECS_CLUSTER
 ```
 
-Change the following environment variables according to the environment being deployed: 
+Change the following environment variables according to the environment being deployed:
 
 | Variable | PRE | PROD |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ The following ports must be open in the default security group:
 | Type | Protocol | Port Range |
 | --- | --- | --- |
 | HTTP | TCP | 80 |
-| Custom TCP | TCP | 8080 | 
+| Custom TCP | TCP | 8080 |
 | Custom TCP | TCP | 8000 |
 | Custom TCP | TCP | 8443 |
 | Custom UDP | UDP | 10000 |
@@ -138,14 +138,14 @@ Select the ECS cluster, in the ECS Instance tab, click on any ECS Instance, sele
 
 ### Configure an Application Load Balancer with SSL
 
-- Listeners: Add HTTP (Secure HTTP) listener 
+- Listeners: Add HTTP (Secure HTTP) listener
 - VPC: Select the VPC created for the ECS Cluster and select both availability zones.
 - Upload the certificated or select it from ACM.
 - Security group: Add the port 443 and 80-
 - Target: jitsi-https
     - Protocol: HTTPS
     - Port: 8443
-        - Health check: 
+        - Health check:
             - Protocol: HTTPS
             - Path: /
 - Register Target: Select just one ECS instances from the ECS cluster.
@@ -157,12 +157,12 @@ The following configuration is to enable colibri stats endpoint in the Applicati
 - Target: jitsi-api
     - Protocol: HTTP
     - Port: 8080
-        - Health check: 
+        - Health check:
             - Protocol: HTTP
             - Path: /colibri/stats
 - Register Target: Select just one ECS instances from the ECS cluster.
 
 Configure the HTTP Listener rules as follows:
 
-1 - If Path is /colibri/* then, forward to target jitsi-api.  
+1 - If Path is /colibri/* then, forward to target jitsi-api.
 2 - If Request otherwise not routed then, forward to jitsi-https.

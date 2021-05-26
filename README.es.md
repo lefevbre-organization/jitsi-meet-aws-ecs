@@ -54,8 +54,8 @@ export AWS_ACCESS_KEY_ID=<replace>
 export AWS_SECRET_ACCESS_KEY=<replace>
 ecs-cli configure profile --profile-name $PROFILE_NAME --access-key $AWS_ACCESS_KEY_ID --secret-key $AWS_SECRET_ACCESS_KEY
 ```
- 
-Configurar el cluster ECS 
+
+Configurar el cluster ECS
 ```bash
 export ECS_CLUSTER=jitsi-ecs
 export AWS_REGION=eu-west-3
@@ -67,7 +67,7 @@ Crear el cluster ECS
 export AWS_KEYPAIR=jitsi-ecs
 export AWS_INSTANCE_TYPE=m5.xlarge
 export ECS_CLUSTER_SIZE=1
-ecs-cli up --keypair $AWS_KEYPAIR --capability-iam --size $ECS_CLUSTER_SIZE --instance-type $AWS_INSTANCE_TYPE --launch-type EC2
+ecs-cli up --keypair $AWS_KEYPAIR --capability-iam --size $ECS_CLUSTER_SIZE --instance-type $AWS_INSTANCE_TYPE --launch-type EC2 --ecs-profile $PROFILE_NAME --cluster-config $ECS_CLUSTER
 ```
 
 ### Definicion de tareas ECS
@@ -80,7 +80,7 @@ Despues de tener el cluster ECS arriba y corriendo, la definicion de tarea para 
 cd jitsi-meet
 cp env.example .env
 ./gen-passwords.sh
-ecs-cli compose --file docker-compose.yml create
+ecs-cli compose --file docker-compose.yml create --ecs-profile $PROFILE_NAME --cluster-config $ECS_CLUSTER
 ```
 
 Cambiar las siguientes variable de entorno acorde al ambiente a deployar:
@@ -125,25 +125,25 @@ Los siguientes puertos deben estar abiertos en el security group por defecto de 
 | Type | Protocol | Port Range |
 | --- | --- | --- |
 | HTTP | TCP | 80 |
-| Custom TCP | TCP | 8080 | 
+| Custom TCP | TCP | 8080 |
 | Custom TCP | TCP | 8000 |
 | Custom TCP | TCP | 8443 |
 | Custom UDP | UDP | 10000 |
 
-Seleccion el ECS cluster, en la pestaña ECS Instance, click en cualquier instancia ECS, seleciona la instancia ECS nuevamente, en la pestaña de seguridad, click en Security Group para editar las reglas de ingreso. 
+Seleccion el ECS cluster, en la pestaña ECS Instance, click en cualquier instancia ECS, seleciona la instancia ECS nuevamente, en la pestaña de seguridad, click en Security Group para editar las reglas de ingreso.
 
 <img src="docs/aws-update-default-ecs-sg.gif" width="75%" height="75%"/>
 
 ### Configurar un Application Load Balancer con SSL
 
-- Listeners: Agregar HTTP (Secure HTTP) listener 
+- Listeners: Agregar HTTP (Secure HTTP) listener
 - VPC: Seleccionar la VPC creada para el ECS Cluster y selecionar ambas Availability Zones
 - Subir el certificado o selecionar desde ACM.
 - Security group: agregar puerto 443 y 80
 - Target: jitsi-https
     - Protocolo: HTTPS
     - Port: 8443
-        - Health check: 
+        - Health check:
             - Protocol: HTTPS
             - Path: /
 - Registrar Target: Seleccionar una instancia del ECS Cluster
@@ -155,12 +155,12 @@ La siguiente configuracion es para habilitar el endpoint de estadisticas de coli
 - Target: jitsi-api
     - Protocolo: HTTP
     - Port: 8080
-        - Health check: 
+        - Health check:
             - Protocol: HTTP
             - Path: /colibri/stats
 - Registrar Target: Seleccionar una instancia del ECS Cluster
 
 Configurar las reglas del listener HTTP de la siguiente forma:
 
-1 - If Path is /colibri/* then, forward to target jitsi-api.  
+1 - If Path is /colibri/* then, forward to target jitsi-api.
 2 - If Request otherwise not routed then, forward to jitsi-https
