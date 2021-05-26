@@ -3,7 +3,7 @@ version: '3'
 services:
     # React Fronted
     frontend:
-        image: urbinaalex17/jitsi-meet-react-frontend:main-latest
+        image: elefebvreoncontainers/jitsi-meet-react-frontend:main-f78378fc3c4cb61c7475878423bd12d179f3bccc
         restart: ${RESTART_POLICY}
         ports:
             - '80:80'
@@ -15,7 +15,7 @@ services:
 
     # Votes Messaging API
     api:
-        image: urbinaalex17/jitsi-votes-messaging-api:master-latest
+        image: elefebvreoncontainers/jitsi-votes-messaging-api:master-1699158172aa855952c9b2eee338f3e5288c33d7
         restart: ${RESTART_POLICY}
         ports:
             - '5000:5000'
@@ -27,7 +27,7 @@ services:
 
     # Frontend
     web:
-        image: jitsi/web:stable-5765-1
+        image: elefebvreoncontainers/jitsi-web:3767253
         build:
           context: web
         restart: ${RESTART_POLICY}
