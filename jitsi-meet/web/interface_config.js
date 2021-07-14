@@ -186,7 +186,7 @@ var interfaceConfig = {
      */
     TOOLBAR_BUTTONS: [
         'microphone', 'camera', 'desktop', 'fullscreen',
-        'fodeviceselection', 'hangup', 'profile', 'chat',
+        'fodeviceselection', 'hangup', 'profile', 'chat','recording'
         'etherpad', 'settings', 'raisehand',
         'videoquality', 'filmstrip', 'invite', 'feedback', 'stats', 'shortcuts',
         'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone', 'security'
